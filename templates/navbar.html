@@ -1,0 +1,126 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-palette"></i> Agencia
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" 
+                       href="{{ url_for('dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                
+                <!-- Nuevo ítem de Administración (solo para admin) -->
+                {% if current_user and current_user.rol == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin_usuarios' }}" 
+                       href="{{ url_for('admin_usuarios') }}">
+                        <i class="bi bi-shield-lock"></i> Admin
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'tareas' }}" 
+                       href="{{ url_for('tareas') }}">
+                        <i class="bi bi-list-task"></i> Tareas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'clientes' }}" 
+                       href="{{ url_for('clientes') }}">
+                        <i class="bi bi-people"></i> Clientes
+                    </a>
+                </li>
+				<li class="nav-item">
+					<a class="nav-link {{ 'active' if request.endpoint == 'crear_tarea' }}" 
+					href="{{ url_for('crear_tarea') }}">
+					<i class="bi bi-plus-lg"></i> Nueva Tarea
+					</a>
+				</li>
+            </ul>
+            
+            <!-- MENÚ USUARIO -->
+            <div class="d-flex">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        {% if current_user %}
+                            {{ current_user.nombre_completo }}
+                            <span class="badge bg-{% if current_user.rol == 'admin' %}danger{% elif current_user.rol == 'jefazo' %}warning{% else %}secondary{% endif %} ms-1">
+                                {{ current_user.rol }}
+                            </span>
+                        {% else %}
+                            Cuenta
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if current_user %}
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Perfil</a></li>
+                            {% if current_user.rol == 'admin' %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_usuarios') }}">
+                                        <i class="bi bi-shield-lock"></i> Panel Admin
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li>
+                            <a class="dropdown-item {{ 'text-danger' if current_user else '' }}" 
+                               href="{{ url_for('login' if not current_user else 'logout') }}">
+                                <i class="bi bi-box-arrow-{{ 'in' if not current_user else 'out' }}"></i>
+                                {{ 'Iniciar sesión' if not current_user else 'Cerrar sesión' }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+				<div class="dropdown ms-3">
+					<button class="btn btn-outline-light position-relative" 
+							type="button" 
+							id="dropdownNotificaciones"
+							data-bs-toggle="dropdown"
+							aria-expanded="false">
+						<i class="bi bi-bell"></i>
+						{% set num_notificaciones = contar_notificaciones_no_leidas(current_user.id if current_user else None) %}
+						{% if num_notificaciones > 0 %}
+						<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+							{{ num_notificaciones }}
+							<span class="visually-hidden">notificaciones no leídas</span>
+						</span>
+						{% endif %}
+					</button>
+					<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownNotificaciones">
+						{% if current_user %}
+							{% set notificaciones = current_user.notificaciones|sort(attribute='fecha', reverse=True) %}
+							{% if notificaciones %}
+								<li><h6 class="dropdown-header">Tus notificaciones</h6></li>
+								{% for notif in notificaciones[:5] %}  <!-- Mostrar solo las 5 más recientes -->
+								<li>
+									<a class="dropdown-item {% if not notif.leida %}fw-bold{% endif %}" 
+									href="{{ url_for('detalle_tarea', tarea_id=notif.tarea_id) }}?marcar_leida={{ notif.id }}">
+										<small class="text-muted">{{ notif.fecha.strftime('%d/%m %H:%M') }}</small><br>
+										{{ notif.mensaje }}
+									</a>
+								</li>
+								{% endfor %}
+								<li><hr class="dropdown-divider"></li>
+								<li><a class="dropdown-item text-center" href="{{ url_for('ver_notificaciones') }}">Ver todas</a></li>
+							{% else %}
+								<li><a class="dropdown-item disabled">No hay notificaciones</a></li>
+							{% endif %}
+						{% else %}
+							<li><a class="dropdown-item disabled">Inicia sesión</a></li>
+						{% endif %}
+					</ul>
+				</div>
+            </div>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">👤 Detalles del Cliente</h2>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h3>{{ cliente.nombre }}</h3>
+                    {% if cliente.empresa %}
+                    <p class="lead">{{ cliente.empresa }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('clientes') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>📌 Información de Contacto</h4>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Email:</strong> {{ cliente.email }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Teléfono:</strong> {{ cliente.telefono if cliente.telefono else 'No especificado' }}
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4>📝 Notas</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ cliente.notas if cliente.notas else 'Sin notas adicionales' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

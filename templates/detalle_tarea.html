@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Encabezado de la tarea -->
+    <h1 class="mt-4">{{ tarea.titulo }}</h1>
+    
+    <!-- Estado y Prioridad -->
+    <div class="mb-4">
+        <span class="badge 
+            {% if tarea.estado == 'pendiente' %}bg-warning
+            {% elif tarea.estado == 'en_progreso' %}bg-info
+            {% else %}bg-success{% endif %}">
+            {{ tarea.estado|replace('_', ' ')|title }}
+        </span>
+        <span class="badge 
+            {% if tarea.prioridad == 'alta' %}bg-danger
+            {% elif tarea.prioridad == 'media' %}bg-warning
+            {% else %}bg-secondary{% endif %}">
+            Prioridad: {{ tarea.prioridad }}
+        </span>
+	
+	{% if current_user.rol in ['admin', 'jefazo'] and tarea.estado != 'completada' %}
+	<form action="{{ url_for('completar_tarea', tarea_id=tarea.id) }}" method="POST" class="d-inline ms-2">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<button type="submit" class="btn btn-success btn-sm">
+			<i class="bi bi-check-circle"></i> Marcar como Completada
+		</button>
+	</form>
+	{% endif %}
+
+    <!-- Información básica -->
+    <div class="card mb-4">
+		<div class="card-body">
+			<h5 class="card-title">Detalles</h5>
+			<p class="card-text">{{ tarea.descripcion }}</p>
+			<ul class="list-unstyled">
+				<li><strong>Asignado a:</strong> {{ tarea.asignado.nombre_completo }}</li>
+				<li><strong>Fecha límite:</strong> {{ tarea.fecha_limite.strftime('%d/%m/%Y') }}</li>
+				{% if tarea.cliente %}
+				<li><strong>Cliente:</strong> {{ tarea.cliente.nombre }}</li>
+				{% endif %}
+			</ul>
+		</div>
+	</div>
+
+    <!-- Sección de Archivos MEJORADA -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Archivos Adjuntos</h5>
+            
+            <!-- Formulario de subida MEJORADO -->
+            <form method="POST" action="{{ url_for('subir_archivo', tarea_id=tarea.id) }}" enctype="multipart/form-data" class="mb-3">
+				<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input type="file" class="form-control" name="archivos[]" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.psd,.ai" required>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="tipo" class="form-select">
+                            <option value="1ºentrega">Entrega Inicial</option>
+                            <option value="correccion">Corrección</option>
+                            <option value="final">Versión Final</option>
+                            <option value="referencia">Material de Referencia</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Subir</button>
+                    </div>
+                </div>
+                <small class="text-muted">Todos los formatos de archivo son aceptados</small>
+            </form>
+
+        <!-- Tabla de archivos -->
+        {% if tarea.archivos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Nombre</th>
+                        <th>Subido por</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for archivo in tarea.archivos|sort(attribute='fecha_subida', reverse=True) %}
+                    <tr>
+                        <td>
+                            <span class="badge 
+                                {% if archivo.tipo == 'correccion' %}bg-warning
+                                {% elif archivo.tipo == 'final' %}bg-success
+                                {% elif archivo.tipo == 'referencia' %}bg-info
+                                {% else %}bg-primary{% endif %}">
+                                {{ archivo.tipo|title }}
+                            </span>
+                        </td>
+                        <td>{{ archivo.nombre }}</td>
+                        <td>
+                            {% if archivo.usuario %}
+                                {{ archivo.usuario.nombre_completo }}
+                            {% else %}
+                                Sistema
+                            {% endif %}
+                        </td>
+                        <td>{{ archivo.fecha_subida.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('descargar_archivo', filename=archivo.ruta) }}" 
+                               class="btn btn-sm btn-outline-primary"
+                               title="Descargar">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            {% if current_user.id == archivo.usuario_id or current_user.rol in ['admin', 'jefazo'] %}
+                            <form action="{{ url_for('eliminar_archivo', archivo_id=archivo.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay archivos adjuntos todavía
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+    <!-- Sección de Comentarios (mejorada con avatares) -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Comentarios</h5>
+            
+            <!-- Formulario de comentario -->
+            <form method="POST" action="{{ url_for('comentar_tarea', tarea_id=tarea.id) }}">
+			    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" name="texto" 
+                              placeholder="Escribe un comentario..." 
+                              required style="height: 100px"></textarea>
+                    <label>Nuevo comentario</label>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Puedes mencionar compañeros con @</small>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Enviar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Lista de comentarios -->
+            <div class="mt-4">
+                {% for comentario in tarea.comentarios|sort(attribute='fecha', reverse=True) %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 40px; height: 40px;">
+                                    {{ comentario.usuario.nombre_completo }}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="card-subtitle mb-2 text-primary">
+                                        {{ comentario.usuario.nombre_completo }}
+                                        {% if comentario.usuario_id == tarea.asignado_a %}
+                                        <span class="badge bg-info">Asignado</span>
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">{{ comentario.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </div>
+                                <p class="card-text">{{ comentario.texto }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">No hay comentarios aún</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para cambiar estado -->
+<script>
+function cambiarEstado(nuevoEstado) {
+    fetch("{{ url_for('cambiar_estado', id=tarea.id) }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `estado=${nuevoEstado}`
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        }
+    });
+}
+
+function confirmarEliminacion(archivoId) {
+    if (confirm('¿Estás seguro de eliminar este archivo?')) {
+        fetch(`/archivo/${archivoId}/eliminar`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

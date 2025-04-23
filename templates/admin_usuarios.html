@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill me-2"></i>Panel de Administración</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Tarjeta de creación de usuarios -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-person-plus"></i> Crear Nuevo Usuario</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+				<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="col-md-6">
+                    <label class="form-label">Nombre de usuario*</label>
+                    <input type="text" class="form-control" name="username" required>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Contraseña*</label>
+                    <input type="password" class="form-control" name="password" required>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Nombre completo*</label>
+                    <input type="text" class="form-control" name="nombre_completo" required>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Email <small class="text-muted">(Opcional)</small></label>
+                    <input type="email" class="form-control" name="email" placeholder="ejemplo@agencia.com">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Rol*</label>
+                    <select class="form-select" name="rol" required>
+                        <option value="">Seleccionar rol...</option>
+                        {% for rol in roles %}
+                            <option value="{{ rol }}">{{ rol }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Guardar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listado de usuarios -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-list-ul"></i> Usuarios Registrados</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Email</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario.nombre_completo }}</td>
+                            <td>{{ usuario.username }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if usuario.rol == 'admin' %}bg-danger
+                                    {% elif usuario.rol == 'jefazo' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ usuario.rol }}
+                                </span>
+                            </td>
+                            <td>{{ usuario.email or '-' }}</td>
+                            <td>
+								<a href="{{ url_for('editar_usuario', id=usuario.id) }}" class="btn btn-sm btn-outline-primary">
+									<i class="bi bi-pencil"></i>
+								</a>
+								<form action="{{ url_for('eliminar_usuario', id=usuario.id) }}" method="POST" class="d-inline ms-1">
+									<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+									<button type="submit" class="btn btn-sm btn-outline-danger" 
+											onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
+										<i class="bi bi-trash"></i>
+									</button>
+								</form>
+							</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay usuarios registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

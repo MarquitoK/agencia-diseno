@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Tareas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-list-task"></i> Tareas
+            <span class="badge bg-primary rounded-pill">{{ tareas.total }}</span>
+        </h1>
+        {% if current_user.rol in ['admin', 'jefazo'] %}
+        <a href="{{ url_for('crear_tarea') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nueva Tarea
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filtros (se mantiene igual) -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <!-- ... (tu código de filtros actual permanece igual) ... -->
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Tareas - Cambios claves aquí -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Título</th>
+                            <th>Asignado a</th>
+                            <th>Cliente</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Fecha Límite</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tarea in tareas.items %}  <!-- Cambiado a tareas.items -->
+                        <tr class="{% if tarea.estado == 'completada' %}table-success{% elif tarea.prioridad == 'alta' and tarea.estado != 'completada' %}table-danger-light{% endif %}">
+                            <td>
+                                <strong>{{ tarea.titulo }}</strong>
+                                {% if tarea.archivos %}
+                                <i class="bi bi-paperclip ms-2 text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td>{{ tarea.asignado.nombre_completo }}</td>  <!-- Cambiado a tarea.asignado -->
+                            <td>
+                                {% if tarea.cliente %}
+                                {{ tarea.cliente.nombre }}
+                                {% else %}
+                                <span class="text-muted">Sin cliente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if tarea.prioridad == 'alta' %}bg-danger
+                                    {% elif tarea.prioridad == 'media' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ tarea.prioridad|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if tarea.estado == 'pendiente' %}bg-warning
+                                    {% elif tarea.estado == 'en_progreso' %}bg-info
+                                    {% else %}bg-success{% endif %}">
+                                    {{ tarea.estado|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if tarea.fecha_limite %}
+                                {{ tarea.fecha_limite.strftime('%d/%m/%Y') }}
+                                {% set dias_restantes = (tarea.fecha_limite - now).days %}
+                                {% if dias_restantes < 0 %}
+                                <span class="badge bg-dark">Vencido</span>
+                                {% elif dias_restantes < 3 %}
+                                <span class="badge bg-warning text-dark">{{ dias_restantes }} días</span>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('detalle_tarea', tarea_id=tarea.id) }}" class="btn btn-sm btn-outline-primary" title="Ver">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if current_user.rol in ['admin', 'jefazo'] %}
+                                <a href="{{ url_for('editar_tarea', tarea_id=tarea.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> No hay tareas registradas
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación (se mantiene igual) -->
+    {% if tareas.pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if tareas.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('tareas', page=tareas.prev_num, **request.args) }}">
+                    &laquo; Anterior
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in tareas.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            <li class="page-item {% if page_num == tareas.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('tareas', page=page_num, **request.args) }}">
+                    {{ page_num if page_num else '...' }}
+                </a>
+            </li>
+            {% endfor %}
+
+            {% if tareas.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('tareas', page=tareas.next_num, **request.args) }}">
+                    Siguiente &raquo;
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

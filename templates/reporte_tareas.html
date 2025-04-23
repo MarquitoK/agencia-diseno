@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Tareas Completadas</h1>
+    <table>
+        <tr>
+            <th>Título</th>
+            <th>Asignado a</th>
+            <th>Fecha Límite</th>
+        </tr>
+        {% for tarea in tareas %}
+        <tr>
+            <td>{{ tarea.titulo }}</td>
+            <td>{{ Usuario.query.get(tarea.asignado_a).nombre_completo }}</td>
+            <td>{{ tarea.fecha_limite }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

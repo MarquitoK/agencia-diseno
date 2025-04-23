@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-bell"></i> Notificaciones</h1>
+        <form method="POST" action="{{ url_for('limpiar_notificaciones') }}">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn btn-outline-secondary">
+				<i class="bi bi-check-all"></i> Marcar todas como leídas
+			</button>
+        </form>
+    </div>
+
+    <div class="list-group">
+        {% for notif in notificaciones %}
+        <a href="{{ url_for('detalle_tarea', tarea_id=notif.tarea_id) }}" 
+           class="list-group-item list-group-item-action {% if not notif.leida %}list-group-item-primary{% endif %}">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ notif.mensaje }}</h5>
+                <small>{{ notif.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+            <p class="mb-1">Tarea: {{ notif.tarea.titulo }}</p>
+        </a>
+        {% else %}
+        <div class="alert alert-info">
+            No tienes notificaciones
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

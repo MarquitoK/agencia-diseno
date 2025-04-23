@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Tarea{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">✏️ Editar Tarea</h1>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- Título -->
+        <div class="mb-3">
+            <label class="form-label">Título*</label>
+            <input type="text" class="form-control" name="titulo" value="{{ tarea.titulo }}" required>
+        </div>
+        
+        <!-- Descripción -->
+        <div class="mb-3">
+            <label class="form-label">Descripción*</label>
+            <textarea class="form-control" name="descripcion" rows="3" required>{{ tarea.descripcion }}</textarea>
+        </div>
+        
+        <!-- Prioridad -->
+        <div class="mb-3 col-md-3">
+            <label class="form-label">Prioridad*</label>
+            <select class="form-select" name="prioridad" required>
+                <option value="alta" {% if tarea.prioridad == 'alta' %}selected{% endif %}>Alta</option>
+                <option value="media" {% if tarea.prioridad == 'media' %}selected{% endif %}>Media</option>
+                <option value="baja" {% if tarea.prioridad == 'baja' %}selected{% endif %}>Baja</option>
+            </select>
+        </div>
+        
+        <!-- Estado -->
+        <div class="mb-3 col-md-3">
+            <label class="form-label">Estado*</label>
+            <select class="form-select" name="estado" required>
+                <option value="pendiente" {% if tarea.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                <option value="en_progreso" {% if tarea.estado == 'en_progreso' %}selected{% endif %}>En Progreso</option>
+                <option value="completada" {% if tarea.estado == 'completada' %}selected{% endif %}>Completada</option>
+            </select>
+        </div>
+        
+        <!-- Fecha Límite -->
+        <div class="mb-3 col-md-3">
+            <label class="form-label">Fecha Límite*</label>
+            <input type="date" class="form-control" name="fecha_limite" 
+                   value="{{ tarea.fecha_limite.strftime('%Y-%m-%d') if tarea.fecha_limite else '' }}"
+                   min="{{ now.strftime('%Y-%m-%d') }}" required>
+        </div>
+        
+        <!-- Asignar a -->
+        <div class="mb-3 col-md-4">
+            <label class="form-label">Asignar a*</label>
+            <select class="form-select" name="asignado_a" required>
+                {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}" {% if usuario.id == tarea.asignado_a %}selected{% endif %}>
+                    {{ usuario.nombre_completo }} ({{ usuario.rol }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Cliente -->
+        <div class="mb-3 col-md-4">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" name="cliente_id">
+                <option value="">-- Sin cliente --</option>
+                {% for cliente in clientes %}
+                <option value="{{ cliente.id }}" {% if cliente.id == tarea.cliente_id %}selected{% endif %}>
+                    {{ cliente.nombre }} {% if cliente.empresa %}({{ cliente.empresa }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+		
+		<div class="mb-3">
+			<label class="form-label">📎 Archivos Adjuntos</label>
+    
+			<!-- Archivos actuales -->
+			{% for archivo in tarea.archivos %}
+			<div class="d-flex align-items-center mb-2">
+				<a href="{{ url_for('static', filename='uploads/' + archivo.ruta) }}" 
+				target="_blank" class="me-2">
+					<i class="bi bi-file-earmark"></i> {{ archivo.nombre }}
+				</a>
+				<button type="button" class="btn btn-sm btn-outline-danger"
+						onclick="eliminarArchivo({{ archivo.id }})">
+					<i class="bi bi-trash"></i>
+				</button>
+			</div>
+			{% endfor %}
+    
+			<!-- Nuevos archivos -->
+			<input type="file" class="form-control" name="nuevos_archivos" multiple>
+			<small class="text-muted">Formatos: .psd, .ai, .pdf, .jpg, .mp4 (Máx. 10MB c/u)</small>
+		</div>
+
+		<!-- Script para eliminar -->
+		<script>
+		function eliminarArchivo(archivoId) {
+			if (confirm('¿Eliminar este archivo permanentemente?')) {
+				fetch(`/archivo/${archivoId}/eliminar`, {
+					method: 'POST',
+					headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+				}).then(response => {
+					if (response.ok) location.reload();
+				});
+			}
+		}
+		</script>
+        
+        <!-- Botones -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-save"></i> Guardar Cambios
+            </button>
+            <a href="{{ url_for('detalle_tarea', tarea_id=tarea.id) }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-person-gear"></i> Editar Usuario</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de usuario*</label>
+                        <input type="text" class="form-control" name="username" value="{{ usuario.username }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Nueva contraseña <small class="text-muted">(Dejar vacío para no cambiar)</small></label>
+                        <input type="password" class="form-control" name="password">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre completo*</label>
+                        <input type="text" class="form-control" name="nombre_completo" value="{{ usuario.nombre_completo }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ usuario.email or '' }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Rol*</label>
+                        <select class="form-select" name="rol" required>
+                            {% for rol in roles %}
+                                <option value="{{ rol }}" {% if rol == usuario.rol %}selected{% endif %}>{{ rol }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{{ url_for('admin_usuarios') }}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

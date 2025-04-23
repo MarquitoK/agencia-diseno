@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">📝 Crear Nueva Tarea</h1>
+    
+    <form method="POST" action="{{ url_for('crear_tarea') }}" class="needs-validation" novalidate enctype="multipart/form-data">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <!-- Título -->
+        <div class="mb-3">
+            <label class="form-label">Título*</label>
+            <input type="text" class="form-control" name="titulo" required>
+            <div class="invalid-feedback">Por favor ingresa un título</div>
+        </div>
+        
+        <!-- Descripción -->
+        <div class="mb-3">
+            <label class="form-label">Descripción*</label>
+            <textarea class="form-control" name="descripcion" rows="3" required></textarea>
+        </div>
+        
+        <!-- Prioridad -->
+        <div class="mb-3 col-md-3">
+            <label class="form-label">Prioridad*</label>
+            <select class="form-select" name="prioridad" required>
+                <option value="alta">🔴 Alta</option>
+                <option value="media" selected>🟡 Media</option>
+                <option value="baja">🟢 Baja</option>
+            </select>
+        </div>
+        
+        <!-- Fecha Límite -->
+        <div class="mb-3 col-md-3">
+            <label class="form-label">Fecha Límite*</label>
+            <input type="date" class="form-control" name="fecha_limite" 
+                   min="{{ now.strftime('%Y-%m-%d') }}" required
+				   pattern="\d{4}-\d{2}-\d{2}">
+        </div>
+        
+        <!-- Asignar a -->
+        <div class="mb-3 col-md-4">
+            <label class="form-label">Asignar a*</label>
+            <select class="form-select" name="asignado_a" required>
+                {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}">
+                    {{ usuario.nombre_completo }} ({{ usuario.rol }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Cliente -->
+        <div class="mb-3 col-md-4">
+            <label class="form-label">Cliente</label>
+            <select class="form-select" name="cliente_id">
+                <option value="">-- Sin cliente --</option>
+                {% for cliente in clientes %}
+                <option value="{{ cliente.id }}">
+                    {{ cliente.nombre }} {% if cliente.empresa %}({{ cliente.empresa }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+		
+		<!-- Adjuntar -->
+		<div class="mb-3">
+			<label class="form-label">📎 Archivos de referencia</label>
+			<input type="file" class="form-control" name="archivos[]" multiple>
+				accept=".pdf,.doc,.docx,.psd,.ai,.jpg,.jpeg,.png,.mp4,.mov">
+			<small class="text-muted">Formatos aceptados: diseños (PSD, AI), documentos (PDF, DOC), imágenes (JPG, PNG) o videos (MP4, MOV)</small>
+		</div>
+        
+        <!-- Botones -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-save"></i> Guardar Tarea
+            </button>
+            <a href="{{ url_for('tareas') }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Validación de formulario -->
+<script>
+(() => {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+{% endblock %}
