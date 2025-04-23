@@ -1,2 +1,13 @@
 from flask_sqlalchemy import SQLAlchemy
-db = SQLAlchemy()  # Esta es la única instancia que debe existir
+from sqlalchemy import MetaData
+
+# Esto soluciona el problema de migraciones con SQLite
+metadata = MetaData(naming_convention={
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+})
+
+db = SQLAlchemy(metadata=metadata)
