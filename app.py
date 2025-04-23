@@ -22,7 +22,7 @@ from flask_login import LoginManager
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '1311015'
 csrf = CSRFProtect(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db.init_app(app)
@@ -678,7 +678,7 @@ with app.app_context():
         try:
             admin = Usuario(
                 username='Fixer',  # Asegúrate de que sea único
-                password_hash=generate_password_hash('1234'),
+                password_hash=generate_password_hash('m.m.1311015@.'),
                 rol='admin',
                 nombre_completo='Administrador Principal'
             )
@@ -690,4 +690,5 @@ with app.app_context():
             print("⚠️ El usuario 'admin' ya existe")
         
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
