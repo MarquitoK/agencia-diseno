@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 from weasyprint import HTML
 from flask_migrate import Migrate
 from functools import wraps
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf import CSRFProtect
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired
